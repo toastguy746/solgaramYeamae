@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>조리 공방 상세정보</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <style>
+        body, html { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background-color: #ffffff; color: #000; animation: fadeIn 0.6s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .nav { padding: 20px 5vw; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; position: sticky; top: 0; background: #fff; z-index: 10; }
+        .back-btn { text-decoration: none; color: #000; font-weight: 700; font-size: 1.1rem; }
+        .content { max-width: 900px; margin: 0 auto; padding: 60px 20px; }
+        .main-img { width: 100%; height: 500px; background-image: url('food.jpg'); background-size: cover; background-position: center; margin-bottom: 40px; }
+        .info-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
+        .info-header h1 { font-size: 3.5rem; margin: 0; font-weight: 900; letter-spacing: -2px; }
+        .status-badge { background-color: #000; color: #fff; padding: 10px 20px; font-weight: 800; font-size: 1.2rem; }
+        .description { font-size: 1.2rem; line-height: 1.8; color: #444; margin-bottom: 50px; }
+        .detail-list { list-style: none; padding: 0; border-top: 2px solid #000; }
+        .detail-list li { padding: 20px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; font-size: 1.1rem; }
+        .detail-list li b { font-weight: 800; width: 120px; }
+        .final-btn { width: 100%; padding: 25px; background-color: #000; color: #fff; border: none; font-size: 1.5rem; font-weight: 900; margin-top: 60px; cursor: pointer; transition: 0.3s; }
+        .final-btn:hover { background-color: #ff3b3b; }
+        #admin-notice { background: #ff3b3b; color: #fff; padding: 15px; text-align: center; font-weight: 800; margin-bottom: 20px; display: none; }
+        .editable { outline: none; transition: background 0.2s; }
+        .admin-mode .editable:hover { background: rgba(255, 59, 59, 0.05); cursor: pointer; }
+        .editable { 
+            outline: none; 
+            transition: all 0.2s; 
+            caret-color: #ff3b3b; /* 💡 커서가 빨간색으로 깜빡임 */
+        }
+        .admin-mode .editable:hover { 
+            background: rgba(255, 59, 59, 0.05); 
+            cursor: pointer; 
+        }
+        .editable:focus { 
+            background: #fff;
+            box-shadow: 0 0 0 2px #ff3b3b; 
+            padding: 2px 8px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="admin-notice">📢 관리자 모드: 항목을 더블클릭하여 수정하세요. (바깥 클릭 시 자동저장)</div>
+    <nav class="nav">
+        <a href="index.html" class="back-btn">← 공방 다시 선택</a>
+        <div id="user-display" style="font-weight: 600;"></div>
+    </nav>
+    <div class="content">
+        <div class="main-img"></div>
+        <div class="info-header">
+            <h1 id="edit-title" class="editable" data-key="food_title">조리 클래스</h1>
+            <div class="status-badge">예약 현황: 0 / 8</div>
+        </div>
+        <p id="edit-intro" class="description editable" data-key="food_intro">
+            맛있는 음식을 직접 만들고 나누는 즐거운 요리 시간입니다. (설명을 입력하세요)
+        </p>
+        <ul class="detail-list">
+            <li><b>일시</b> <span class="editable" data-key="food_date">날짜를 입력하세요</span></li>
+            <li><b>장소</b> <span class="editable" data-key="food_location">장소를 입력하세요</span></li>
+            <li><b>준비물</b> <span class="editable" data-key="food_supplies">준비물을 입력하세요</span></li>
+        </ul>
+        <button class="final-btn" onclick="confirmBooking()">이 공방으로 예약 확정하기 ➔</button>
+    </div>
+    <script>
+        // DB 가져오기
+        function getDB() {
+            const db = localStorage.getItem('solgaramDB');
+            return db ? JSON.parse(db) : { admins: [{name: "정세헌", phone: "01098625850"}], reservations: [] };
+        }
+
+        // DB 저장하기
+        function saveDB(data) {
+            localStorage.setItem('solgaramDB', JSON.stringify(data));
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const name = localStorage.getItem('visitorName');
+            const isAdmin = localStorage.getItem('isAdmin') === 'true';
+            if (name) document.getElementById('user-display').textContent = `${name}님`;
+            document.querySelectorAll('.editable').forEach(el => {
+                const savedValue = localStorage.getItem(el.dataset.key);
+                if (savedValue) el.innerHTML = savedValue;
+            });
+            if (isAdmin) {
+                document.body.classList.add('admin-mode');
+                document.getElementById('admin-notice').style.display = 'block';
+                document.querySelector('.final-btn').textContent = "예약 명단 확인하기 (관리자)";
+                document.querySelectorAll('.editable').forEach(el => {
+                    el.addEventListener('dblclick', function() { this.contentEditable = "true"; this.focus(); });
+                    el.addEventListener('blur', function() { this.contentEditable = "false"; localStorage.setItem(this.dataset.key, this.innerHTML); });
+                });
+            }
+        });
+        function confirmBooking() {
+            const isAdmin = localStorage.getItem('isAdmin') === 'true';
+            if (isAdmin) { alert('관리자 권한으로 예약 명단 페이지로 이동합니다.'); } 
+            else {
+                const name = localStorage.getItem('visitorName');
+                if(confirm(`${name}님, 조리 클래스로 예약을 확정하시겠습니까?`)) { alert('예약이 성공적으로 완료되었습니다!'); }
+            }
+        }
+    </script>
+</body>
+</html>
