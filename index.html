@@ -21,42 +21,47 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         body { animation: fadeIn 1s ease-in-out; }
 
-        #edit-profile-btn {
-            position: absolute; top: 30px; left: 30px; z-index: 25;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            padding: 10px 20px; border-radius: 50px;
-            border: 1px solid var(--glass-border);
-            color: #fff; text-decoration: none; font-size: 0.9rem; font-weight: 600;
-            transition: all 0.3s;
-            display: flex; align-items: center; gap: 8px;
-        }
-        #edit-profile-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.05);
+        /* 상단 공통 스타일 */
+        #edit-profile-btn, #greeting-box, #reservation-status {
+            position: absolute; z-index: 25;
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border); color: #fff;
         }
 
-        #greeting-box {
-            position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
-            z-index: 20; 
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            padding: 10px 30px; border-radius: 50px;
-            border: 1px solid var(--glass-border);
-            color: #fff; font-size: 1rem; font-weight: 600;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            pointer-events: none; white-space: nowrap;
+        #edit-profile-btn {
+            top: 30px; left: 30px; background: var(--glass);
+            padding: 10px 20px; border-radius: 50px; text-decoration: none; 
+            font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: 0.3s;
         }
+        #edit-profile-btn:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
+
+        #greeting-box {
+            top: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.3); border-radius: 50px;
+            padding: 10px 30px; font-size: 1rem; font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); pointer-events: none; white-space: nowrap;
+        }
+
+        /* 💡 예약 상태창 스타일 추가 */
+        #reservation-status {
+            top: 85px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.15); border-radius: 30px;
+            padding: 10px 25px; font-size: 0.95rem; font-weight: 700;
+            display: none; align-items: center; gap: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        .cancel-btn {
+            background: rgba(255, 59, 59, 0.8); color: #fff; border: none;
+            padding: 6px 14px; border-radius: 20px; font-weight: 800; cursor: pointer;
+            transition: 0.2s; font-size: 0.85rem;
+        }
+        .cancel-btn:hover { background: var(--primary); transform: scale(1.05); }
 
         .container { display: flex; width: 100%; height: 100vh; }
         .section {
-            flex: 1; position: relative;
-            background-size: cover; background-position: center;
+            flex: 1; position: relative; background-size: cover; background-position: center;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-decoration: none; overflow: hidden;
-            transition: all 0.5s ease;
+            text-decoration: none; overflow: hidden; transition: 0.5s ease;
         }
 
         .section.wood { background-image: url('wood.jpg'); }
@@ -64,29 +69,21 @@
         .section.food { background-image: url('food.jpg'); }
 
         .section::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            content: ''; position: absolute; inset: 0;
             background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.8) 100%);
-            z-index: 1; transition: opacity 0.5s;
+            z-index: 1; transition: 0.5s;
         }
 
-        .title-wrapper { position: relative; z-index: 2; text-align: center; transition: transform 0.5s ease; }
+        .title-wrapper { position: relative; z-index: 2; text-align: center; transition: 0.5s ease; }
         .section:hover .title-wrapper { transform: translateY(-25px); }
 
-        .title {
-            font-size: 4.5vw; font-weight: 900; color: #fff;
-            letter-spacing: -2px; text-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            margin: 0;
-        }
+        .title { font-size: 4.5vw; font-weight: 900; color: #fff; letter-spacing: -2px; text-shadow: 0 10px 20px rgba(0,0,0,0.5); margin: 0; }
 
         .booking-text {
-            display: inline-block; margin-top: 20px;
-            padding: 12px 35px; border-radius: 30px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: #fff; font-weight: 700; font-size: 1.1rem;
-            opacity: 0; transform: translateY(20px);
-            transition: all 0.4s ease;
+            display: inline-block; margin-top: 20px; padding: 12px 35px; border-radius: 30px;
+            background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3); color: #fff; font-weight: 700; font-size: 1.1rem;
+            opacity: 0; transform: translateY(20px); transition: 0.4s ease;
         }
         .section:hover .booking-text { opacity: 1; transform: translateY(0); }
 
@@ -94,79 +91,103 @@
             position: fixed; bottom: 30px; right: 30px; z-index: 100;
             background: var(--primary); color: #fff; border: none;
             padding: 14px 24px; font-weight: 800; border-radius: 50px;
-            cursor: pointer; display: none;
-            box-shadow: 0 10px 25px rgba(255, 59, 59, 0.4);
-            transition: all 0.3s;
+            cursor: pointer; display: none; box-shadow: 0 10px 25px rgba(255, 59, 59, 0.4); transition: 0.3s;
         }
+        #admin-manage-btn:hover { transform: scale(1.05); background: #000; }
 
         #admin-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); backdrop-filter: blur(10px);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px);
             z-index: 1000; display: none; justify-content: center; align-items: center;
         }
-        .admin-modal-content {
-            background: #fff; padding: 40px; width: 350px; border-radius: 30px;
-        }
-        .admin-modal-content input {
-            width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #eee; border-radius: 12px; box-sizing: border-box;
-        }
+        .admin-modal-content { background: #fff; padding: 40px; width: 350px; border-radius: 30px; }
+        .admin-modal-content input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #eee; border-radius: 12px; box-sizing: border-box; outline: none; }
     </style>
 </head>
 <body>
 
-    <a href="information.html" id="edit-profile-btn">
-        <span>👤</span> 내 정보 수정
-    </a>
-
+    <a href="information.html" id="edit-profile-btn"><span>👤</span> 내 정보 수정</a>
+    
     <div id="greeting-box"><span id="greeting-text">환영합니다!</span></div>
-
-    <div class="container">
-        <a href="wood.html" class="section wood">
-            <div class="title-wrapper"><h2 class="title">목공</h2><div class="booking-text">예약하기</div></div>
-        </a>
-        <a href="doyeah.html" class="section doyeah">
-            <div class="title-wrapper"><h2 class="title">도예</h2><div class="booking-text">예약하기</div></div>
-        </a>
-        <a href="food.html" class="section food">
-            <div class="title-wrapper"><h2 class="title">조리</h2><div class="booking-text">예약하기</div></div>
-        </a>
+    
+    <div id="reservation-status">
+        <span id="status-text">예약 내역 확인 중...</span>
+        <button class="cancel-btn" onclick="cancelReservation()">예약 취소</button>
     </div>
 
-    <button id="admin-manage-btn" onclick="toggleModal()">🛠️ 관리자 설정</button>
+    <div class="container">
+        <a href="wood.html" class="section wood"><div class="title-wrapper"><h2 class="title">목공</h2><div class="booking-text">예약하기</div></div></a>
+        <a href="doyeah.html" class="section doyeah"><div class="title-wrapper"><h2 class="title">도예</h2><div class="booking-text">예약하기</div></div></a>
+        <a href="food.html" class="section food"><div class="title-wrapper"><h2 class="title">조리</h2><div class="booking-text">예약하기</div></div></a>
+    </div>
+
+    <button id="admin-manage-btn" onclick="toggleModal()">🛠️ 관리자 등록</button>
     <div id="admin-modal">
         <div class="admin-modal-content">
-            <h3 style="color: #000;">관리자 등록</h3>
+            <h3 style="color: #000; margin-top: 0;">관리자 등록</h3>
             <input type="text" id="new-name" placeholder="새 관리자 이름">
-            <input type="tel" id="new-phone" placeholder="새 관리자 연락처">
+            <input type="tel" id="new-phone" placeholder="새 관리자 연락처" maxlength="13">
             <button onclick="addAdmin()" style="width:100%; background:#000; color:#fff; padding:15px; border:none; border-radius:12px; cursor:pointer; font-weight:800; margin-top:10px;">등록하기</button>
             <button onclick="toggleModal()" style="width:100%; background:none; border:none; padding:10px; cursor:pointer; color:#000; font-weight:600; margin-top:10px;">닫기</button>
         </div>
     </div>
 
     <script>
-        // DB 가져오기
-        function getDB() {
-            const db = localStorage.getItem('solgaramDB');
-            return db ? JSON.parse(db) : { admins: [{name: "정세헌", phone: "01098625850"}], reservations: [] };
-        }
+        const DB_KEY = 'solgaramDB';
 
-        // DB 저장하기
-        function saveDB(data) {
-            localStorage.setItem('solgaramDB', JSON.stringify(data));
-        }
-        
         document.addEventListener('DOMContentLoaded', () => {
             const name = localStorage.getItem('visitorName');
+            const phone = localStorage.getItem('visitorPhone');
             const isAdmin = localStorage.getItem('isAdmin') === 'true';
+            
             const greeting = document.getElementById('greeting-text');
+            const newPhoneInput = document.getElementById('new-phone');
+            const statusBox = document.getElementById('reservation-status');
+            const statusText = document.getElementById('status-text');
 
+            // 1. 인사말 및 관리자 버튼
             if (isAdmin) {
                 greeting.textContent = "관리자님 안녕하십니까";
                 document.getElementById('admin-manage-btn').style.display = 'block';
             } else if (name) {
                 greeting.textContent = `${name}님, 체험을 선택해주세요.`;
             }
+
+            // 💡 2. 예약 상태 확인 로직
+            if (phone) {
+                const db = JSON.parse(localStorage.getItem(DB_KEY));
+                const cleanPhone = phone.replace(/-/g, '');
+                const currentUser = db?.users.find(u => u.phone.replace(/-/g, '') === cleanPhone);
+
+                if (currentUser && currentUser.reservation) {
+                    const shopMap = { 'wood': '목공', 'doyeah': '도예', 'food': '조리' };
+                    statusText.textContent = `현재 [${shopMap[currentUser.reservation]}] 예약 완료`;
+                    statusBox.style.display = 'flex'; // 예약이 있으면 상태창 표시
+                }
+            }
+
+            newPhoneInput.oninput = (e) => {
+                let val = e.target.value.replace(/[^0-9]/g, '');
+                let res = val.length < 4 ? val : val.length < 8 ? val.substr(0, 3) + '-' + val.substr(3) : val.substr(0, 3) + '-' + val.substr(3, 4) + '-' + val.substr(7);
+                e.target.value = res;
+            };
         });
+
+        // 💡 3. 예약 취소 함수
+        function cancelReservation() {
+            if(confirm("정말 예약을 취소하시겠습니까?")) {
+                const phone = localStorage.getItem('visitorPhone').replace(/-/g, '');
+                const db = JSON.parse(localStorage.getItem(DB_KEY));
+                const userIndex = db.users.findIndex(u => u.phone.replace(/-/g, '') === phone);
+
+                if(userIndex !== -1) {
+                    // 유저 정보에서 reservation 키를 삭제해버림
+                    delete db.users[userIndex].reservation;
+                    localStorage.setItem(DB_KEY, JSON.stringify(db));
+                    alert("예약이 정상적으로 취소되었습니다.");
+                    location.reload(); // 새로고침해서 상태창 숨기기
+                }
+            }
+        }
 
         function toggleModal() {
             const m = document.getElementById('admin-modal');
@@ -174,14 +195,26 @@
         }
 
         function addAdmin() {
-            const n = document.getElementById('new-name').value;
-            const p = document.getElementById('new-phone').value;
-            if(!n || !p) return alert('정보를 입력해주세요.');
-            let list = JSON.parse(localStorage.getItem('adminList')) || [];
-            list.push({name: n, phone: p});
-            localStorage.setItem('adminList', JSON.stringify(list));
-            alert(`${n}님 추가 완료!`);
+            const n = document.getElementById('new-name').value.trim();
+            const p = document.getElementById('new-phone').value.trim();
+            if (!n || !p) return alert('정보를 입력해주세요.');
+
+            const db = JSON.parse(localStorage.getItem(DB_KEY)) || { users: [], reservations: [] };
+            const idx = db.users.findIndex(u => u.name === n && u.phone === p);
+
+            if (idx !== -1) {
+                if (db.users[idx].role === 'admin') return alert('이미 등록된 관리자입니다.');
+                db.users[idx].role = 'admin';
+                alert(`${n}님을 관리자로 승급시켰습니다!`);
+            } else {
+                db.users.push({ name: n, phone: p, role: "admin" });
+                alert(`${n}님을 새 관리자로 등록했습니다!`);
+            }
+
+            localStorage.setItem(DB_KEY, JSON.stringify(db));
             toggleModal();
+            document.getElementById('new-name').value = '';
+            document.getElementById('new-phone').value = '';
         }
     </script>
 </body>

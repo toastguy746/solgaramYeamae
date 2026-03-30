@@ -6,43 +6,44 @@
     <title>조리 공방 상세정보</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <style>
-        body, html { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background-color: #ffffff; color: #000; animation: fadeIn 0.6s ease-in-out; }
+        body, html { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background: #fff; color: #000; animation: fadeIn 0.6s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
         .nav { padding: 20px 5vw; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; position: sticky; top: 0; background: #fff; z-index: 10; }
         .back-btn { text-decoration: none; color: #000; font-weight: 700; font-size: 1.1rem; }
         .content { max-width: 900px; margin: 0 auto; padding: 60px 20px; }
-        .main-img { width: 100%; height: 500px; background-image: url('food.jpg'); background-size: cover; background-position: center; margin-bottom: 40px; }
+        
+        .main-img { width: 100%; height: 500px; background: url('food.jpg') center/cover; margin-bottom: 40px; }
+        
         .info-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
         .info-header h1 { font-size: 3.5rem; margin: 0; font-weight: 900; letter-spacing: -2px; }
-        .status-badge { background-color: #000; color: #fff; padding: 10px 20px; font-weight: 800; font-size: 1.2rem; }
+        .status-badge { background: #000; color: #fff; padding: 10px 20px; font-weight: 800; font-size: 1.2rem; }
         .description { font-size: 1.2rem; line-height: 1.8; color: #444; margin-bottom: 50px; }
+        
         .detail-list { list-style: none; padding: 0; border-top: 2px solid #000; }
-        .detail-list li { padding: 20px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; font-size: 1.1rem; }
+        .detail-list li { padding: 20px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; }
         .detail-list li b { font-weight: 800; width: 120px; }
-        .final-btn { width: 100%; padding: 25px; background-color: #000; color: #fff; border: none; font-size: 1.5rem; font-weight: 900; margin-top: 60px; cursor: pointer; transition: 0.3s; }
-        .final-btn:hover { background-color: #ff3b3b; }
+        
+        /* 💡 관리자용 드롭다운 스타일 */
+        #admin-date-select {
+            appearance: none; -webkit-appearance: none;
+            padding: 8px 35px 8px 15px; border-radius: 8px; border: 1px solid #ff3b3b; 
+            background: #fff url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3b3b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") no-repeat right 10px center;
+            background-size: 16px; font-family: inherit; font-size: 1.05rem; font-weight: 800; color: #ff3b3b; cursor: pointer; outline: none; transition: 0.2s;
+        }
+        #admin-date-select:focus { box-shadow: 0 0 0 3px rgba(255,59,59,0.2); }
+
+        .final-btn { width: 100%; padding: 25px; background: #000; color: #fff; border: none; font-size: 1.5rem; font-weight: 900; margin-top: 60px; cursor: pointer; transition: 0.3s; }
+        .final-btn:hover { background: #ff3b3b; }
         #admin-notice { background: #ff3b3b; color: #fff; padding: 15px; text-align: center; font-weight: 800; margin-bottom: 20px; display: none; }
-        .editable { outline: none; transition: background 0.2s; }
+
+        .editable { outline: none; transition: 0.2s; caret-color: #ff3b3b; }
         .admin-mode .editable:hover { background: rgba(255, 59, 59, 0.05); cursor: pointer; }
-        .editable { 
-            outline: none; 
-            transition: all 0.2s; 
-            caret-color: #ff3b3b; /* 💡 커서가 빨간색으로 깜빡임 */
-        }
-        .admin-mode .editable:hover { 
-            background: rgba(255, 59, 59, 0.05); 
-            cursor: pointer; 
-        }
-        .editable:focus { 
-            background: #fff;
-            box-shadow: 0 0 0 2px #ff3b3b; 
-            padding: 2px 8px;
-            border-radius: 8px;
-        }
+        .editable:focus { background: #fff; box-shadow: 0 0 0 2px #ff3b3b; padding: 2px 10px; border-radius: 8px; }
     </style>
 </head>
 <body>
-    <div id="admin-notice">📢 관리자 모드: 항목을 더블클릭하여 수정하세요. (바깥 클릭 시 자동저장)</div>
+    <div id="admin-notice">📢 관리자 모드: 내용 더블클릭 수정 / 날짜는 드롭다운으로 설정하세요.</div>
     <nav class="nav">
         <a href="index.html" class="back-btn">← 공방 다시 선택</a>
         <div id="user-display" style="font-weight: 600;"></div>
@@ -54,50 +55,121 @@
             <div class="status-badge">예약 현황: 0 / 8</div>
         </div>
         <p id="edit-intro" class="description editable" data-key="food_intro">
-            맛있는 음식을 직접 만들고 나누는 즐거운 요리 시간입니다. (설명을 입력하세요)
+            나무의 향기와 질감을 느끼며 나만의 소품을 제작하는 시간입니다. <br>
+            이번 클래스에서는 원목 도마 또는 수제 연필꽂이 중 하나를 선택하여 제작할 수 있습니다. 
         </p>
         <ul class="detail-list">
-            <li><b>일시</b> <span class="editable" data-key="food_date">날짜를 입력하세요</span></li>
-            <li><b>장소</b> <span class="editable" data-key="food_location">장소를 입력하세요</span></li>
-            <li><b>준비물</b> <span class="editable" data-key="food_supplies">준비물을 입력하세요</span></li>
+            <li>
+                <b>일시</b> 
+                <span id="date-user-view" style="font-weight: 600;"></span>
+                
+                <select id="admin-date-select" style="display: none;">
+                    <option value="1월 1일">1월 1일</option>
+                    <option value="2월 3일">2월 3일</option>
+                    <option value="3월 3일">3월 3일</option>
+                </select>
+            </li>
+            <li><b>장소</b> <span class="editable" data-key="food_location">솔가람고 본관 2층 기술실</span></li>
+            <li><b>준비물</b> <span class="editable" data-key="food_supplies">편한 복장, 개인 텀블러</span></li>
         </ul>
         <button class="final-btn" onclick="confirmBooking()">이 공방으로 예약 확정하기 ➔</button>
     </div>
-    <script>
-        // DB 가져오기
-        function getDB() {
-            const db = localStorage.getItem('solgaramDB');
-            return db ? JSON.parse(db) : { admins: [{name: "정세헌", phone: "01098625850"}], reservations: [] };
-        }
 
-        // DB 저장하기
-        function saveDB(data) {
-            localStorage.setItem('solgaramDB', JSON.stringify(data));
-        }
+    <script>
+        const DB_KEY = 'solgaramDB';
+        const CURRENT_SHOP = 'food'; // 💡 다른 공방에선 이걸 food나 doyeah로 변경!
+
         document.addEventListener('DOMContentLoaded', () => {
             const name = localStorage.getItem('visitorName');
             const isAdmin = localStorage.getItem('isAdmin') === 'true';
+
             if (name) document.getElementById('user-display').textContent = `${name}님`;
-            document.querySelectorAll('.editable').forEach(el => {
-                const savedValue = localStorage.getItem(el.dataset.key);
-                if (savedValue) el.innerHTML = savedValue;
-            });
+
+            const db = JSON.parse(localStorage.getItem(DB_KEY)) || { users: [], reservations: [] };
+            const currentCount = db.users.filter(u => u.reservation === CURRENT_SHOP).length;
+            document.querySelector('.status-badge').textContent = `예약 현황: ${currentCount} / 8`;
+
+            // 💡 DB에서 현재 공방에 세팅된 날짜 가져오기 (기본값: 1월 1일)
+            const savedDate = localStorage.getItem(`${CURRENT_SHOP}_selected_date`) || '1월 1일';
+
             if (isAdmin) {
                 document.body.classList.add('admin-mode');
                 document.getElementById('admin-notice').style.display = 'block';
-                document.querySelector('.final-btn').textContent = "예약 명단 확인하기 (관리자)";
-                document.querySelectorAll('.editable').forEach(el => {
-                    el.addEventListener('dblclick', function() { this.contentEditable = "true"; this.focus(); });
-                    el.addEventListener('blur', function() { this.contentEditable = "false"; localStorage.setItem(this.dataset.key, this.innerHTML); });
+                document.querySelector('.final-btn').textContent = "명단 확인하기 (관리자)";
+                
+                // 💡 관리자: 텍스트 숨기고 빨간색 드롭다운 표시
+                document.getElementById('date-user-view').style.display = 'none';
+                const dateSelect = document.getElementById('admin-date-select');
+                dateSelect.style.display = 'inline-block';
+                dateSelect.value = savedDate; // 저장된 값으로 초기 세팅
+
+                // 드롭다운 변경 시 바로 로컬스토리지에 저장
+                dateSelect.addEventListener('change', (e) => {
+                    localStorage.setItem(`${CURRENT_SHOP}_selected_date`, e.target.value);
                 });
+
+            } else {
+                // 💡 일반 유저: 드롭다운 숨기고 텍스트만 표시
+                document.getElementById('date-user-view').textContent = savedDate;
             }
+
+            // 일반 텍스트(장소, 준비물 등) 수정 기능
+            document.querySelectorAll('.editable').forEach(el => {
+                const savedValue = localStorage.getItem(el.dataset.key);
+                if (savedValue) el.innerHTML = savedValue; 
+
+                if (isAdmin) { 
+                    el.addEventListener('dblclick', () => { el.contentEditable = "true"; el.focus(); });
+                    el.addEventListener('blur', () => { el.contentEditable = "false"; localStorage.setItem(el.dataset.key, el.textContent); });
+                }
+            });
         });
+
         function confirmBooking() {
-            const isAdmin = localStorage.getItem('isAdmin') === 'true';
-            if (isAdmin) { alert('관리자 권한으로 예약 명단 페이지로 이동합니다.'); } 
-            else {
-                const name = localStorage.getItem('visitorName');
-                if(confirm(`${name}님, 조리 클래스로 예약을 확정하시겠습니까?`)) { alert('예약이 성공적으로 완료되었습니다!'); }
+            if (localStorage.getItem('isAdmin') === 'true') {
+                window.location.href = 'admin.html';
+                return;
+            } 
+            
+            const phone = localStorage.getItem('visitorPhone');
+            const name = localStorage.getItem('visitorName') || '고객';
+
+            if (!phone) {
+                alert('로그인 정보가 없습니다. 처음부터 다시 진행해주세요.');
+                window.location.href = 'information.html';
+                return;
+            }
+
+            const db = JSON.parse(localStorage.getItem(DB_KEY));
+            const cleanPhone = phone.replace(/-/g, '');
+            const userIndex = db.users.findIndex(u => u.phone.replace(/-/g, '') === cleanPhone);
+
+            if (userIndex !== -1) {
+                const user = db.users[userIndex];
+                
+                if (user.reservation) {
+                    const shopNames = { 'wood': '목공', 'food': '조리', 'doyeah': '도예' };
+                    alert(`이미 [${shopNames[user.reservation]}] 클래스를 예약하셨습니다!\n1인당 1개의 공방만 예약 가능합니다.`);
+                    return; 
+                }
+
+                const currentCount = db.users.filter(u => u.reservation === CURRENT_SHOP).length;
+                if (currentCount >= 8) {
+                    alert('죄송합니다. 해당 공방은 이미 예약 정원(8명)이 마감되었습니다. 😭');
+                    return;
+                }
+
+                // 💡 예약 시, 현재 공방에 세팅된 날짜를 유저 정보에 같이 저장
+                const finalDate = localStorage.getItem(`${CURRENT_SHOP}_selected_date`) || '1월 1일';
+
+                if(confirm(`${name}님, 조리 클래스(${finalDate})로 예약을 확정하시겠습니까?`)) {
+                    db.users[userIndex].reservation = CURRENT_SHOP; 
+                    db.users[userIndex].resDate = finalDate; // 날짜 저장!
+                    localStorage.setItem(DB_KEY, JSON.stringify(db));
+                    
+                    alert('예약이 성공적으로 완료되었습니다!');
+                    window.location.href = 'index.html'; 
+                }
             }
         }
     </script>
