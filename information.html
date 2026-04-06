@@ -37,7 +37,7 @@
             padding: 80px; border-radius: 40px;
             box-shadow: 0 30px 100px rgba(0,0,0,0.08);
             border: 1px solid rgba(255, 255, 255, 0.4);
-            text-align: center; max-width: 800px; width: 90%;
+            text-align: center; max-width: 900px; width: 90%; /* 넓이 살짝 여유있게 조정 */
         }
 
         .title-main { 
@@ -48,13 +48,14 @@
         .title-sub { font-size: 1.2rem; font-weight: 600; margin: 20px 0 60px 0; color: #888; letter-spacing: 4px; text-transform: uppercase; }
 
         .form-area { display: flex; flex-direction: column; align-items: center; gap: 40px; }
-        .input-row { display: flex; gap: 30px; width: 100%; justify-content: center; }
+        /* 💡 flex-wrap: wrap 추가하여 3칸이 넘치면 자연스럽게 줄바꿈되도록 함 */
+        .input-row { display: flex; gap: 30px; width: 100%; justify-content: center; flex-wrap: wrap; }
         
-        .input-group { display: flex; flex-direction: column; width: 240px; text-align: left; }
+        .input-group { display: flex; flex-direction: column; width: 220px; text-align: left; }
         .input-group label { font-size: 0.8rem; font-weight: 800; margin-bottom: 8px; color: #aaa; text-transform: uppercase; padding-left: 2px; }
         .input-group input {
             border: none; border-bottom: 2px solid #ddd; background: transparent;
-            font-size: 1.5rem; font-weight: 700; padding: 12px 0; color: #000; outline: none; transition: 0.3s;
+            font-size: 1.3rem; font-weight: 700; padding: 12px 0; color: #000; outline: none; transition: 0.3s;
         }
         .input-group input:focus { border-bottom: 2px solid var(--primary); }
         .input-group input::placeholder { color: #eee; }
@@ -98,8 +99,7 @@
             <h2>개인정보 동의</h2>
             <div class="terms-box">
                 <p>본 시스템은 <b>솔가람고등학교</b> 공방 체험 예약을 위해 아래 정보를 수집합니다.</p>
-                <p><strong>1. 수집 항목:</strong> 성명, 휴대전화번호</p>
-                <p><strong>2. 이용 목적:</strong> 예약자 본인 인증 및 명단 관리</p>
+                <p><strong>1. 수집 항목:</strong> 성명, 휴대전화번호, 소속 학교</p> <p><strong>2. 이용 목적:</strong> 예약자 본인 인증 및 명단 관리</p>
                 <p><strong>3. 보유 기간:</strong> 행사 종료 후 7일 보관</p>
             </div>
             <label class="checkbox-container">
@@ -122,6 +122,10 @@
                             <input type="text" id="userName" placeholder="성함 입력" required autocomplete="off">
                         </div>
                         <div class="input-group">
+                            <label for="userSchool">School</label>
+                            <input type="text" id="userSchool" placeholder="학교명 입력" required autocomplete="off">
+                        </div>
+                        <div class="input-group">
                             <label for="userPhone">Mobile</label>
                             <input type="tel" id="userPhone" placeholder="010-0000-0000" required autocomplete="off" maxlength="13">
                         </div>
@@ -141,15 +145,14 @@
             const agreeBtn = document.getElementById('agree-btn');
             const phoneInput = document.getElementById('userPhone');
 
-            // 1. DB 초기화 (단축)
+            // 1. DB 초기화 시 학교(school) 속성 포함
             if (!localStorage.getItem(DB_KEY)) {
                 localStorage.setItem(DB_KEY, JSON.stringify({
-                    users: [{ name: "정세헌", phone: "010-9862-5850", role: "admin" }],
+                    users: [{ name: "정세헌", phone: "010-9862-5850", school: "솔가람고", role: "admin" }],
                     reservations: []
                 }));
             }
 
-            // 2. 하이픈 포매팅 (삼항 연산자로 단축)
             phoneInput.oninput = (e) => {
                 let val = e.target.value.replace(/[^0-9]/g, '');
                 e.target.value = val.length < 4 ? val : val.length < 8 ? val.substr(0, 3) + '-' + val.substr(3) : val.substr(0, 3) + '-' + val.substr(3, 4) + '-' + val.substr(7);
@@ -158,10 +161,10 @@
             checkbox.onchange = (e) => agreeBtn.disabled = !e.target.checked;
             agreeBtn.onclick = () => modal.classList.add('hidden');
 
-            // 3. 폼 제출 로직 (이중 검색 제거)
             document.getElementById('infoForm').onsubmit = (e) => {
                 e.preventDefault();
                 const name = document.getElementById('userName').value.trim();
+                const school = document.getElementById('userSchool').value.trim(); // 💡 학교 데이터 추출
                 const phone = phoneInput.value;
                 const cleanPhone = phone.replace(/-/g, '');
                 const db = JSON.parse(localStorage.getItem(DB_KEY));
@@ -170,13 +173,15 @@
 
                 if (user) {
                     if (user.name !== name) return alert(`이미 등록된 번호지만 이름이 다릅니다.\n(등록된 이름: ${user.name})`);
+                    // 💡 기존 유저일 경우 학교 정보를 최신화해줌
+                    user.school = school;
+                    localStorage.setItem(DB_KEY, JSON.stringify(db));
                 } else {
-                    user = { name, phone, role: "user" }; // 객체를 변수에 담아서 바로 활용
+                    user = { name, phone, school, role: "user" }; // 💡 새 유저 생성 시 학교 포함
                     db.users.push(user);
                     localStorage.setItem(DB_KEY, JSON.stringify(db));
                 }
 
-                // 방금 찾은(혹은 생성한) user 객체를 그대로 사용하여 세션 등록
                 localStorage.setItem('visitorName', user.name);
                 localStorage.setItem('visitorPhone', user.phone);
                 localStorage.setItem('isAdmin', user.role === 'admin' ? 'true' : 'false');

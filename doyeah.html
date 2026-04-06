@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>도예 공방 상세정보</title>
+    <title>목공 공방 상세정보</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <style>
         body, html { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background: #fff; color: #000; animation: fadeIn 0.6s ease-in-out; }
@@ -24,14 +24,22 @@
         .detail-list li { padding: 20px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; }
         .detail-list li b { font-weight: 800; width: 120px; }
         
-        /* 💡 관리자용 드롭다운 스타일 */
-        #admin-date-select {
+        /* 💡 유저용 날짜 드롭다운 스타일 */
+        #date-select {
             appearance: none; -webkit-appearance: none;
-            padding: 8px 35px 8px 15px; border-radius: 8px; border: 1px solid #ff3b3b; 
-            background: #fff url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3b3b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") no-repeat right 10px center;
-            background-size: 16px; font-family: inherit; font-size: 1.05rem; font-weight: 800; color: #ff3b3b; cursor: pointer; outline: none; transition: 0.2s;
+            padding: 10px 35px 10px 15px; border-radius: 12px; border: 1px solid #ddd; 
+            background: #f9f9f9 url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") no-repeat right 12px center;
+            background-size: 16px; font-family: inherit; font-size: 1.05rem; font-weight: 700; cursor: pointer; outline: none; transition: 0.2s;
         }
-        #admin-date-select:focus { box-shadow: 0 0 0 3px rgba(255,59,59,0.2); }
+        #date-select:focus { border-color: #ff3b3b; box-shadow: 0 0 0 2px rgba(255,59,59,0.2); }
+
+        /* 💡 관리자용 날짜 수정 인풋 스타일 */
+        .admin-date-input {
+            width: 120px; padding: 8px; border: 1px solid #ff3b3b; border-radius: 8px;
+            font-family: inherit; font-size: 0.95rem; font-weight: 600; text-align: right;
+            outline: none; transition: 0.2s;
+        }
+        .admin-date-input:focus { box-shadow: 0 0 0 2px rgba(255,59,59,0.2); }
 
         .final-btn { width: 100%; padding: 25px; background: #000; color: #fff; border: none; font-size: 1.5rem; font-weight: 900; margin-top: 60px; cursor: pointer; transition: 0.3s; }
         .final-btn:hover { background: #ff3b3b; }
@@ -43,7 +51,7 @@
     </style>
 </head>
 <body>
-    <div id="admin-notice">📢 관리자 모드: 내용 더블클릭 수정 / 날짜는 드롭다운으로 설정하세요.</div>
+    <div id="admin-notice">📢 관리자 모드: 내용 더블클릭 수정 / 날짜 옵션 3개 설정.</div>
     <nav class="nav">
         <a href="index.html" class="back-btn">← 공방 다시 선택</a>
         <div id="user-display" style="font-weight: 600;"></div>
@@ -51,7 +59,7 @@
     <div class="content">
         <div class="main-img"></div>
         <div class="info-header">
-            <h1 id="edit-title" class="editable" data-key="doyeah_title">도예 클래스</h1>
+            <h1 id="edit-title" class="editable" data-key="doyeah">도예 클래스</h1>
             <div class="status-badge">예약 현황: 0 / 8</div>
         </div>
         <p id="edit-intro" class="description editable" data-key="doyeah_intro">
@@ -59,15 +67,25 @@
             이번 클래스에서는 원목 도마 또는 수제 연필꽂이 중 하나를 선택하여 제작할 수 있습니다. 
         </p>
         <ul class="detail-list">
-            <li>
-                <b>일시</b> 
-                <span id="date-user-view" style="font-weight: 600;"></span>
+            <li style="align-items: flex-start;">
+                <b style="margin-top: 10px;">일시</b> 
                 
-                <select id="admin-date-select" style="display: none;">
-                    <option value="1월 1일">1월 1일</option>
-                    <option value="2월 3일">2월 3일</option>
-                    <option value="3월 3일">3월 3일</option>
-                </select>
+                <select id="date-select" style="display: none;"></select>
+                
+                <div id="admin-date-setup" style="display: none; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 0.85rem; color: #888; font-weight: 800;">옵션 1</span>
+                        <input type="text" class="admin-date-input" id="admin_date_1">
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 0.85rem; color: #888; font-weight: 800;">옵션 2</span>
+                        <input type="text" class="admin-date-input" id="admin_date_2">
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 0.85rem; color: #888; font-weight: 800;">옵션 3</span>
+                        <input type="text" class="admin-date-input" id="admin_date_3">
+                    </div>
+                </div>
             </li>
             <li><b>장소</b> <span class="editable" data-key="doyeah_location">솔가람고 본관 2층 기술실</span></li>
             <li><b>준비물</b> <span class="editable" data-key="doyeah_supplies">편한 복장, 개인 텀블러</span></li>
@@ -89,31 +107,45 @@
             const currentCount = db.users.filter(u => u.reservation === CURRENT_SHOP).length;
             document.querySelector('.status-badge').textContent = `예약 현황: ${currentCount} / 8`;
 
-            // 💡 DB에서 현재 공방에 세팅된 날짜 가져오기 (기본값: 1월 1일)
-            const savedDate = localStorage.getItem(`${CURRENT_SHOP}_selected_date`) || '1월 1일';
+            // 💡 DB에서 날짜 옵션 3개 불러오기 (기본값 세팅)
+            const opt1 = localStorage.getItem(`${CURRENT_SHOP}_opt_1`) || '1월 1일 14:00';
+            const opt2 = localStorage.getItem(`${CURRENT_SHOP}_opt_2`) || '2월 3일 14:00';
+            const opt3 = localStorage.getItem(`${CURRENT_SHOP}_opt_3`) || '3월 3일 14:00';
 
             if (isAdmin) {
                 document.body.classList.add('admin-mode');
                 document.getElementById('admin-notice').style.display = 'block';
                 document.querySelector('.final-btn').textContent = "명단 확인하기 (관리자)";
                 
-                // 💡 관리자: 텍스트 숨기고 빨간색 드롭다운 표시
-                document.getElementById('date-user-view').style.display = 'none';
-                const dateSelect = document.getElementById('admin-date-select');
-                dateSelect.style.display = 'inline-block';
-                dateSelect.value = savedDate; // 저장된 값으로 초기 세팅
+                // 💡 관리자: 3개의 인풋창을 보여주고 값 채우기
+                const adminSetup = document.getElementById('admin-date-setup');
+                adminSetup.style.display = 'flex';
+                
+                const in1 = document.getElementById('admin_date_1');
+                const in2 = document.getElementById('admin_date_2');
+                const in3 = document.getElementById('admin_date_3');
+                
+                in1.value = opt1; in2.value = opt2; in3.value = opt3;
 
-                // 드롭다운 변경 시 바로 로컬스토리지에 저장
-                dateSelect.addEventListener('change', (e) => {
-                    localStorage.setItem(`${CURRENT_SHOP}_selected_date`, e.target.value);
+                // 인풋창 내용이 바뀔 때마다 로컬스토리지에 실시간 저장
+                [in1, in2, in3].forEach((input, index) => {
+                    input.addEventListener('input', (e) => {
+                        localStorage.setItem(`${CURRENT_SHOP}_opt_${index + 1}`, e.target.value);
+                    });
                 });
 
             } else {
-                // 💡 일반 유저: 드롭다운 숨기고 텍스트만 표시
-                document.getElementById('date-user-view').textContent = savedDate;
+                // 💡 일반 유저: 드롭다운을 띄우고, 관리자가 설정한 3개의 옵션을 추가
+                const select = document.getElementById('date-select');
+                select.style.display = 'inline-block';
+                select.innerHTML = `
+                    <option value="${opt1}">${opt1}</option>
+                    <option value="${opt2}">${opt2}</option>
+                    <option value="${opt3}">${opt3}</option>
+                `;
             }
 
-            // 일반 텍스트(장소, 준비물 등) 수정 기능
+            // 일반 텍스트 수정 기능
             document.querySelectorAll('.editable').forEach(el => {
                 const savedValue = localStorage.getItem(el.dataset.key);
                 if (savedValue) el.innerHTML = savedValue; 
@@ -159,12 +191,12 @@
                     return;
                 }
 
-                // 💡 예약 시, 현재 공방에 세팅된 날짜를 유저 정보에 같이 저장
-                const finalDate = localStorage.getItem(`${CURRENT_SHOP}_selected_date`) || '1월 1일';
+                // 💡 유저가 드롭다운에서 선택한 날짜 가져오기
+                const selectedDate = document.getElementById('date-select').value;
 
-                if(confirm(`${name}님, 도예 클래스(${finalDate})로 예약을 확정하시겠습니까?`)) {
+                if(confirm(`${name}님, 목공 클래스(${selectedDate})로 예약을 확정하시겠습니까?`)) {
                     db.users[userIndex].reservation = CURRENT_SHOP; 
-                    db.users[userIndex].resDate = finalDate; // 날짜 저장!
+                    db.users[userIndex].resDate = selectedDate; // 선택한 날짜 저장!
                     localStorage.setItem(DB_KEY, JSON.stringify(db));
                     
                     alert('예약이 성공적으로 완료되었습니다!');

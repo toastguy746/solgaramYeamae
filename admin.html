@@ -19,7 +19,7 @@
         .back-btn { text-decoration: none; color: #000; font-weight: 800; font-size: 1.1rem; transition: 0.2s; }
         .back-btn:hover { color: var(--primary); }
         .admin-container { padding: 40px 5vw; display: flex; flex-direction: column; align-items: center; }
-        .admin-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); padding: 40px; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.05); border: 1px solid rgba(255, 255, 255, 0.6); width: 100%; max-width: 1000px; }
+        .admin-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); padding: 40px; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.05); border: 1px solid rgba(255, 255, 255, 0.6); width: 100%; max-width: 1100px; }
         .header-wrap { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
         .title { font-size: 2.5rem; font-weight: 900; margin: 0; letter-spacing: -1px; }
         .total-count { font-size: 1.1rem; font-weight: 700; color: #666; background: #eee; padding: 8px 15px; border-radius: 20px; }
@@ -38,6 +38,8 @@
         tr:hover { background: rgba(255,255,255,0.5); }
         .delete-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; transition: 0.2s; opacity: 0.5; padding: 5px; }
         .delete-btn:hover { opacity: 1; transform: scale(1.3); }
+        /* 긴 학교명 처리 */
+        .school-text { color: #555; font-size: 1rem; }
     </style>
 </head>
 <body>
@@ -59,7 +61,7 @@
                     <tr>
                         <th>No.</th>
                         <th>이름</th>
-                        <th>전화번호</th>
+                        <th>소속 학교</th> <th>전화번호</th>
                         <th>신분</th>
                         <th>예약 공방</th>
                     </tr>
@@ -72,7 +74,6 @@
     <script>
         const DB_KEY = 'solgaramDB';
 
-        // 전역 함수: 유저 삭제 로직
         window.deleteUser = function(phoneStr, nameStr) {
             if(confirm(`정말 [${nameStr}] 유저를 강제 삭제하시겠습니까?\n(예약 내역도 함께 사라지며 복구할 수 없습니다)`)) {
                 const db = JSON.parse(localStorage.getItem(DB_KEY));
@@ -84,10 +85,9 @@
         };
 
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. 빠른 권한 차단
             if (localStorage.getItem('isAdmin') !== 'true') {
                 alert('접근 권한이 없습니다.');
-                window.location.replace('index.html'); // replace로 히스토리 찌꺼기 방지
+                window.location.replace('index.html'); 
                 return;
             }
 
@@ -100,12 +100,10 @@
 
             document.getElementById('total-users').textContent = `총 유저 수: ${db.users.length}명`;
 
-            // 마스터 접속 시에만 테이블 헤더에 '관리' 추가 (insertAdjacentHTML로 빠르게 삽입)
             if (iAmMaster) {
                 document.querySelector('#table-head tr').insertAdjacentHTML('beforeend', '<th>관리</th>');
             }
 
-            // 💡 2. 렌더링 최적화: DOM 접근을 반복문 안에서 배제하고 문자열 연산으로 한 번에 처리
             const rowsHTML = db.users.map((u, index) => {
                 const isMasterRow = (u.name === "정세헌" && u.phone.replace(/-/g, '') === "01098625850");
                 const displayName = isMasterRow ? `👑 ${u.name}` : u.name;
@@ -113,9 +111,11 @@
                 const roleText = u.role === 'admin' ? '관리자' : '일반인';
                 const resClass = u.reservation ? `res-${u.reservation}` : 'res-none';
                 
-                // 날짜가 있다면 줄바꿈해서 보여주도록 처리
                 let resText = u.reservation ? shopMap[u.reservation] : '미예약';
                 if (u.reservation && u.resDate) resText += `<br><span style="font-size:0.85rem; color:#fff; opacity:0.8;">${u.resDate}</span>`;
+
+                // 💡 수집된 학교 정보 (없으면 '미입력' 처리)
+                const schoolName = u.school ? u.school : '<span style="color:#ccc;">미입력</span>';
 
                 let deleteCell = '';
                 if (iAmMaster) {
@@ -128,15 +128,14 @@
                     <tr>
                         <td style="color: #aaa; font-weight: 800;">${index + 1}</td>
                         <td style="font-weight: 800;">${displayName}</td>
-                        <td>${u.phone}</td>
+                        <td class="school-text">${schoolName}</td> <td>${u.phone}</td>
                         <td><span class="role-badge ${roleClass}">${roleText}</span></td>
                         <td><span class="res-badge ${resClass}">${resText}</span></td>
                         ${deleteCell}
                     </tr>
                 `;
-            }).join(''); // 배열을 하나의 거대한 HTML 문자열로 합침
+            }).join(''); 
 
-            // 💡 3. 완성된 거대 HTML을 딱 한 번만 DOM에 삽입
             document.getElementById('user-list').innerHTML = rowsHTML;
         });
     </script>
