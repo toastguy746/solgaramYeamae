@@ -19,10 +19,23 @@
         .back-btn { text-decoration: none; color: #000; font-weight: 800; font-size: 1.1rem; transition: 0.2s; }
         .back-btn:hover { color: var(--primary); }
         .admin-container { padding: 40px 5vw; display: flex; flex-direction: column; align-items: center; }
-        .admin-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); padding: 40px; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.05); border: 1px solid rgba(255, 255, 255, 0.6); width: 100%; max-width: 1100px; }
-        .header-wrap { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
+        .admin-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); padding: 40px; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.05); border: 1px solid rgba(255, 255, 255, 0.6); width: 100%; max-width: 1000px; }
+        
+        .header-wrap { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
         .title { font-size: 2.5rem; font-weight: 900; margin: 0; letter-spacing: -1px; }
-        .total-count { font-size: 1.1rem; font-weight: 700; color: #666; background: #eee; padding: 8px 15px; border-radius: 20px; }
+        
+        /* 💡 다운로드 버튼을 위한 우측 정렬 스타일 추가 */
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .total-count { font-size: 1.1rem; font-weight: 700; color: #666; background: #eee; padding: 8px 15px; border-radius: 20px; transition: 0.3s; }
+        .csv-btn { background: #1d1d1f; color: #fff; border: none; padding: 10px 20px; border-radius: 20px; font-weight: 800; cursor: pointer; transition: 0.2s; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .csv-btn:hover { background: var(--primary); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,59,59,0.3); }
+
+        /* 탭 메뉴 스타일 */
+        .tabs { display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid #f1f1f1; padding-bottom: 15px; }
+        .tab-btn { background: none; border: none; font-size: 1.1rem; font-weight: 700; color: #aaa; cursor: pointer; padding: 10px 24px; border-radius: 12px; transition: all 0.2s ease; }
+        .tab-btn:hover { color: #666; background: rgba(0,0,0,0.03); }
+        .tab-btn.active { color: var(--primary); background: rgba(255, 59, 59, 0.1); }
+
         table { width: 100%; border-collapse: collapse; text-align: left; }
         th, td { padding: 18px 15px; border-bottom: 1px solid rgba(0,0,0,0.05); }
         th { font-weight: 800; color: #888; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; }
@@ -38,8 +51,6 @@
         tr:hover { background: rgba(255,255,255,0.5); }
         .delete-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; transition: 0.2s; opacity: 0.5; padding: 5px; }
         .delete-btn:hover { opacity: 1; transform: scale(1.3); }
-        /* 긴 학교명 처리 */
-        .school-text { color: #555; font-size: 1rem; }
     </style>
 </head>
 <body>
@@ -52,8 +63,17 @@
     <div class="admin-container">
         <div class="admin-card fade-in">
             <div class="header-wrap">
-                <h1 class="title">통합 유저 명단</h1>
-                <div class="total-count" id="total-users">총 유저 수: 0명</div>
+                <h1 class="title">유저 명단 관리</h1>
+                <div class="header-right">
+                    <div class="total-count" id="total-users">총 유저 수: 0명</div>
+                    <button id="csv-download-btn" class="csv-btn">📥 CSV 다운로드</button>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" data-role="all">전체 명단</button>
+                <button class="tab-btn" data-role="admin">관리자</button>
+                <button class="tab-btn" data-role="user">일반 유저</button>
             </div>
 
             <table>
@@ -61,7 +81,7 @@
                     <tr>
                         <th>No.</th>
                         <th>이름</th>
-                        <th>소속 학교</th> <th>전화번호</th>
+                        <th>전화번호</th>
                         <th>신분</th>
                         <th>예약 공방</th>
                     </tr>
@@ -73,7 +93,11 @@
 
     <script>
         const DB_KEY = 'solgaramDB';
+        let allUsers = [];
+        let iAmMaster = false;
+        const shopMap = { 'wood': '목공', 'doyeah': '도예', 'food': '조리' };
 
+        // 유저 삭제 로직
         window.deleteUser = function(phoneStr, nameStr) {
             if(confirm(`정말 [${nameStr}] 유저를 강제 삭제하시겠습니까?\n(예약 내역도 함께 사라지며 복구할 수 없습니다)`)) {
                 const db = JSON.parse(localStorage.getItem(DB_KEY));
@@ -84,27 +108,70 @@
             }
         };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('isAdmin') !== 'true') {
-                alert('접근 권한이 없습니다.');
-                window.location.replace('index.html'); 
+        // 💡 CSV 다운로드 로직
+        function downloadCSV() {
+            // 현재 선택된 탭 정보 가져오기
+            const activeTab = document.querySelector('.tab-btn.active').getAttribute('data-role');
+            let exportUsers = allUsers;
+            
+            if (activeTab !== 'all') {
+                exportUsers = allUsers.filter(u => u.role === activeTab);
+            }
+
+            if (exportUsers.length === 0) {
+                alert("다운로드할 데이터가 없습니다.");
                 return;
             }
 
-            const myName = localStorage.getItem('visitorName');
-            const myPhone = (localStorage.getItem('visitorPhone') || '').replace(/-/g, '');
-            const iAmMaster = (myName === "정세헌" && myPhone === "01098625850");
+            // 엑셀 한글 깨짐 방지 (BOM)
+            let csvContent = '\uFEFF'; 
+            csvContent += "No.,이름,전화번호,신분,예약 공방,예약 일시\n";
 
-            const db = JSON.parse(localStorage.getItem(DB_KEY)) || { users: [] };
-            const shopMap = { 'wood': '목공', 'doyeah': '도예', 'food': '조리' };
+            // 데이터 변환 루프
+            exportUsers.forEach((u, index) => {
+                const name = u.name;
+                const phone = u.phone;
+                const role = u.role === 'admin' ? '관리자' : '일반인';
+                const shop = u.reservation ? shopMap[u.reservation] : '미예약';
+                const resDate = (u.reservation && u.resDate) ? u.resDate : '';
 
-            document.getElementById('total-users').textContent = `총 유저 수: ${db.users.length}명`;
+                // 쌍따옴표로 감싸서 안전하게 CSV 텍스트 병합
+                csvContent += `"${index + 1}","${name}","${phone}","${role}","${shop}","${resDate}"\n`;
+            });
 
-            if (iAmMaster) {
-                document.querySelector('#table-head tr').insertAdjacentHTML('beforeend', '<th>관리</th>');
+            // 파일명 날짜 세팅
+            const today = new Date();
+            const dateStr = today.getFullYear() + String(today.getMonth() + 1).padStart(2, '0') + String(today.getDate()).padStart(2, '0');
+            
+            let fileName = `솔가람_전체명단_${dateStr}.csv`;
+            if (activeTab === 'admin') fileName = `솔가람_관리자명단_${dateStr}.csv`;
+            if (activeTab === 'user') fileName = `솔가람_일반유저명단_${dateStr}.csv`;
+
+            // 가상의 a 태그를 만들어 다운로드 실행
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 테이블 렌더링 함수 (필터링 적용)
+        function renderTable(roleFilter) {
+            let filteredUsers = allUsers;
+            
+            if (roleFilter !== 'all') {
+                filteredUsers = allUsers.filter(u => u.role === roleFilter);
             }
 
-            const rowsHTML = db.users.map((u, index) => {
+            document.getElementById('total-users').textContent = 
+                roleFilter === 'all' ? `총 유저 수: ${filteredUsers.length}명` : `조회된 인원: ${filteredUsers.length}명`;
+
+            const rowsHTML = filteredUsers.map((u, index) => {
                 const isMasterRow = (u.name === "정세헌" && u.phone.replace(/-/g, '') === "01098625850");
                 const displayName = isMasterRow ? `👑 ${u.name}` : u.name;
                 const roleClass = u.role === 'admin' ? 'role-admin' : 'role-user';
@@ -113,9 +180,6 @@
                 
                 let resText = u.reservation ? shopMap[u.reservation] : '미예약';
                 if (u.reservation && u.resDate) resText += `<br><span style="font-size:0.85rem; color:#fff; opacity:0.8;">${u.resDate}</span>`;
-
-                // 💡 수집된 학교 정보 (없으면 '미입력' 처리)
-                const schoolName = u.school ? u.school : '<span style="color:#ccc;">미입력</span>';
 
                 let deleteCell = '';
                 if (iAmMaster) {
@@ -128,15 +192,49 @@
                     <tr>
                         <td style="color: #aaa; font-weight: 800;">${index + 1}</td>
                         <td style="font-weight: 800;">${displayName}</td>
-                        <td class="school-text">${schoolName}</td> <td>${u.phone}</td>
+                        <td>${u.phone}</td>
                         <td><span class="role-badge ${roleClass}">${roleText}</span></td>
                         <td><span class="res-badge ${resClass}">${resText}</span></td>
                         ${deleteCell}
                     </tr>
                 `;
-            }).join(''); 
+            }).join('');
 
             document.getElementById('user-list').innerHTML = rowsHTML;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('isAdmin') !== 'true') {
+                alert('접근 권한이 없습니다.');
+                window.location.replace('index.html');
+                return;
+            }
+
+            const myName = localStorage.getItem('visitorName');
+            const myPhone = (localStorage.getItem('visitorPhone') || '').replace(/-/g, '');
+            iAmMaster = (myName === "정세헌" && myPhone === "01098625850");
+
+            const db = JSON.parse(localStorage.getItem(DB_KEY)) || { users: [] };
+            allUsers = db.users;
+
+            if (iAmMaster) {
+                document.querySelector('#table-head tr').insertAdjacentHTML('beforeend', '<th>관리</th>');
+            }
+
+            // 다운로드 버튼 이벤트 연결
+            document.getElementById('csv-download-btn').addEventListener('click', downloadCSV);
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    
+                    const role = e.target.getAttribute('data-role');
+                    renderTable(role);
+                });
+            });
+
+            renderTable('all');
         });
     </script>
 </body>

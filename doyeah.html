@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>목공 공방 상세정보</title>
+    <title>도예 공방 상세정보</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <style>
         body, html { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background: #fff; color: #000; animation: fadeIn 0.6s ease-in-out; }
@@ -13,6 +13,20 @@
         .back-btn { text-decoration: none; color: #000; font-weight: 700; font-size: 1.1rem; }
         .content { max-width: 900px; margin: 0 auto; padding: 60px 20px; }
         
+        /* 💡 추가된 예약 상태창 & 취소 버튼 스타일 */
+        #reservation-status {
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 100;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); border-radius: 30px; color: #fff;
+            padding: 12px 25px; font-size: 0.95rem; font-weight: 700;
+            display: none; align-items: center; gap: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: fadeIn 0.5s ease-out;
+        }
+        .cancel-btn {
+            background: #ff3b3b; color: #fff; border: none; padding: 6px 14px; 
+            border-radius: 20px; font-weight: 800; cursor: pointer; transition: 0.2s; font-size: 0.85rem;
+        }
+        .cancel-btn:hover { background: #d32f2f; transform: scale(1.05); }
+
         .main-img { width: 100%; height: 500px; background: url('doyeah.jpeg') center/cover; margin-bottom: 40px; }
         
         .info-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
@@ -24,7 +38,6 @@
         .detail-list li { padding: 20px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; }
         .detail-list li b { font-weight: 800; width: 120px; }
         
-        /* 💡 유저용 날짜 드롭다운 스타일 */
         #date-select {
             appearance: none; -webkit-appearance: none;
             padding: 10px 35px 10px 15px; border-radius: 12px; border: 1px solid #ddd; 
@@ -33,16 +46,13 @@
         }
         #date-select:focus { border-color: #ff3b3b; box-shadow: 0 0 0 2px rgba(255,59,59,0.2); }
 
-        /* 💡 관리자용 날짜 수정 인풋 스타일 */
-        .admin-date-input {
-            width: 120px; padding: 8px; border: 1px solid #ff3b3b; border-radius: 8px;
-            font-family: inherit; font-size: 0.95rem; font-weight: 600; text-align: right;
-            outline: none; transition: 0.2s;
-        }
+        .admin-date-input { width: 140px; padding: 8px; border: 1px solid #ff3b3b; border-radius: 8px; font-family: inherit; font-size: 0.95rem; font-weight: 600; text-align: right; outline: none; transition: 0.2s; }
         .admin-date-input:focus { box-shadow: 0 0 0 2px rgba(255,59,59,0.2); }
 
         .final-btn { width: 100%; padding: 25px; background: #000; color: #fff; border: none; font-size: 1.5rem; font-weight: 900; margin-top: 60px; cursor: pointer; transition: 0.3s; }
-        .final-btn:hover { background: #ff3b3b; }
+        .final-btn:hover:not(:disabled) { background: #ff3b3b; }
+        .final-btn:disabled { background: #ccc; cursor: not-allowed; } /* 💡 비활성화 버튼 스타일 */
+        
         #admin-notice { background: #ff3b3b; color: #fff; padding: 15px; text-align: center; font-weight: 800; margin-bottom: 20px; display: none; }
 
         .editable { outline: none; transition: 0.2s; caret-color: #ff3b3b; }
@@ -51,15 +61,21 @@
     </style>
 </head>
 <body>
-    <div id="admin-notice">📢 관리자 모드: 내용 더블클릭 수정 / 날짜 옵션 3개 설정.</div>
+    <div id="admin-notice">관리자 모드: 내용 더블클릭 수정</div>
     <nav class="nav">
         <a href="index.html" class="back-btn">← 공방 다시 선택</a>
         <div id="user-display" style="font-weight: 600;"></div>
     </nav>
+
+    <div id="reservation-status">
+        <span id="status-text">예약 내역 확인 중...</span>
+        <button class="cancel-btn" onclick="cancelReservation()">예약 취소</button>
+    </div>
+
     <div class="content">
         <div class="main-img"></div>
         <div class="info-header">
-            <h1 id="edit-title" class="editable" data-key="doyeah">도예 클래스</h1>
+            <h1 id="edit-title" class="editable" data-key="doyeah_title">도예 클래스</h1>
             <div class="status-badge">예약 현황: 0 / 8</div>
         </div>
         <p id="edit-intro" class="description editable" data-key="doyeah_intro">
@@ -90,7 +106,7 @@
             <li><b>장소</b> <span class="editable" data-key="doyeah_location">솔가람고 본관 2층 기술실</span></li>
             <li><b>준비물</b> <span class="editable" data-key="doyeah_supplies">편한 복장, 개인 텀블러</span></li>
         </ul>
-        <button class="final-btn" onclick="confirmBooking()">이 공방으로 예약 확정하기 ➔</button>
+        <button class="final-btn" id="booking-btn" onclick="confirmBooking()">이 공방으로 예약 확정하기 ➔</button>
     </div>
 
     <script>
@@ -99,6 +115,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             const name = localStorage.getItem('visitorName');
+            const phone = localStorage.getItem('visitorPhone');
             const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
             if (name) document.getElementById('user-display').textContent = `${name}님`;
@@ -107,7 +124,29 @@
             const currentCount = db.users.filter(u => u.reservation === CURRENT_SHOP).length;
             document.querySelector('.status-badge').textContent = `예약 현황: ${currentCount} / 8`;
 
-            // 💡 DB에서 날짜 옵션 3개 불러오기 (기본값 세팅)
+            // 💡 1. 예약 상태 확인 & 상태창 띄우기
+            if (phone) {
+                const cleanPhone = phone.replace(/-/g, '');
+                const currentUser = db.users.find(u => u.phone.replace(/-/g, '') === cleanPhone);
+                const statusBox = document.getElementById('reservation-status');
+                const statusText = document.getElementById('status-text');
+                const finalBtn = document.getElementById('booking-btn');
+
+                if (currentUser && currentUser.reservation) {
+                    const shopMap = { 'wood': '목공', 'doyeah': '도예', 'food': '조리' };
+                    const dateStr = currentUser.resDate ? ` (${currentUser.resDate})` : '';
+                    statusText.textContent = `현재 [${shopMap[currentUser.reservation]}] 예약 완료${dateStr}`;
+                    statusBox.style.display = 'flex'; // 상단 상태창 보이기
+
+                    // 💡 보너스 디테일: 이미 예약한 일반 유저는 하단 확정 버튼 비활성화
+                    if (!isAdmin) {
+                        finalBtn.disabled = true;
+                        finalBtn.textContent = "이미 예약된 내역이 있습니다.";
+                    }
+                }
+            }
+
+            // DB에서 날짜 옵션 3개 불러오기
             const opt1 = localStorage.getItem(`${CURRENT_SHOP}_opt_1`) || '1월 1일 14:00';
             const opt2 = localStorage.getItem(`${CURRENT_SHOP}_opt_2`) || '2월 3일 14:00';
             const opt3 = localStorage.getItem(`${CURRENT_SHOP}_opt_3`) || '3월 3일 14:00';
@@ -115,9 +154,8 @@
             if (isAdmin) {
                 document.body.classList.add('admin-mode');
                 document.getElementById('admin-notice').style.display = 'block';
-                document.querySelector('.final-btn').textContent = "명단 확인하기 (관리자)";
+                document.getElementById('booking-btn').textContent = "명단 확인하기 (관리자)";
                 
-                // 💡 관리자: 3개의 인풋창을 보여주고 값 채우기
                 const adminSetup = document.getElementById('admin-date-setup');
                 adminSetup.style.display = 'flex';
                 
@@ -127,15 +165,12 @@
                 
                 in1.value = opt1; in2.value = opt2; in3.value = opt3;
 
-                // 인풋창 내용이 바뀔 때마다 로컬스토리지에 실시간 저장
                 [in1, in2, in3].forEach((input, index) => {
                     input.addEventListener('input', (e) => {
                         localStorage.setItem(`${CURRENT_SHOP}_opt_${index + 1}`, e.target.value);
                     });
                 });
-
             } else {
-                // 💡 일반 유저: 드롭다운을 띄우고, 관리자가 설정한 3개의 옵션을 추가
                 const select = document.getElementById('date-select');
                 select.style.display = 'inline-block';
                 select.innerHTML = `
@@ -145,7 +180,6 @@
                 `;
             }
 
-            // 일반 텍스트 수정 기능
             document.querySelectorAll('.editable').forEach(el => {
                 const savedValue = localStorage.getItem(el.dataset.key);
                 if (savedValue) el.innerHTML = savedValue; 
@@ -156,6 +190,23 @@
                 }
             });
         });
+
+        // 💡 2. 상세페이지용 예약 취소 함수 추가
+        function cancelReservation() {
+            if(confirm("정말 예약을 취소하시겠습니까?")) {
+                const phone = localStorage.getItem('visitorPhone').replace(/-/g, '');
+                const db = JSON.parse(localStorage.getItem(DB_KEY));
+                const userIndex = db.users.findIndex(u => u.phone.replace(/-/g, '') === phone);
+
+                if(userIndex !== -1) {
+                    delete db.users[userIndex].reservation;
+                    delete db.users[userIndex].resDate; // 예약 날짜도 깔끔하게 삭제
+                    localStorage.setItem(DB_KEY, JSON.stringify(db));
+                    alert("예약이 정상적으로 취소되었습니다.");
+                    location.reload(); // 새로고침해서 상태창 숨기기
+                }
+            }
+        }
 
         function confirmBooking() {
             if (localStorage.getItem('isAdmin') === 'true') {
@@ -179,6 +230,7 @@
             if (userIndex !== -1) {
                 const user = db.users[userIndex];
                 
+                // (버튼 비활성화를 뚫고 들어오는 걸 막는 2차 방어선)
                 if (user.reservation) {
                     const shopNames = { 'wood': '목공', 'food': '조리', 'doyeah': '도예' };
                     alert(`이미 [${shopNames[user.reservation]}] 클래스를 예약하셨습니다!\n1인당 1개의 공방만 예약 가능합니다.`);
@@ -187,16 +239,15 @@
 
                 const currentCount = db.users.filter(u => u.reservation === CURRENT_SHOP).length;
                 if (currentCount >= 8) {
-                    alert('죄송합니다. 해당 공방은 이미 예약 정원(8명)이 마감되었습니다. 😭');
+                    alert('죄송합니다. 해당 공방은 이미 예약 정원(8명)이 마감되었습니다.');
                     return;
                 }
 
-                // 💡 유저가 드롭다운에서 선택한 날짜 가져오기
                 const selectedDate = document.getElementById('date-select').value;
 
-                if(confirm(`${name}님, 목공 클래스(${selectedDate})로 예약을 확정하시겠습니까?`)) {
+                if(confirm(`${name}님, 도예 클래스(${selectedDate})로 예약을 확정하시겠습니까?`)) {
                     db.users[userIndex].reservation = CURRENT_SHOP; 
-                    db.users[userIndex].resDate = selectedDate; // 선택한 날짜 저장!
+                    db.users[userIndex].resDate = selectedDate; 
                     localStorage.setItem(DB_KEY, JSON.stringify(db));
                     
                     alert('예약이 성공적으로 완료되었습니다!');
